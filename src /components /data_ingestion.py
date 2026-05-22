@@ -1,5 +1,8 @@
 import os
 import sys
+from pathlib import Path
+sys.path.append(str(Path(Teen_Mental_Health_Dataset.csv).parent.parent))
+
 from src.exception import CustomException
 from src.logger import logging
 import pandas as pd
