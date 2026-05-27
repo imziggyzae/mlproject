@@ -1,5 +1,5 @@
 import os
-import sys\
+import sys
 from src.exception import CustomException
 from src.logger import logging
 import pandas as pd
@@ -12,6 +12,7 @@ from src.components.data_transformation import DataTransformationConfig
 
 from src.components.model_trainer import ModelTrainerConfig
 from src.components.model_trainer import ModelTrainer
+
 @dataclass
 class DataIngestionConfig:
     train_data_path: str=os.path.join('artifacts',"train.csv")
@@ -25,7 +26,11 @@ class DataIngestion:
     def initiate_data_ingestion(self):
         logging.info("Entered the data ingestion method or component")
         try:
-            df=pd.read_csv('notebook/data/Teen_Mental_Health_Dataset.csv')
+            # Fix: Use absolute path relative to script location
+            base_path = os.path.dirname(os.path.abspath(__file__))
+            data_file = os.path.join(base_path, 'notebook/data/Teen_Mental_Health_Dataset.csv')
+            
+            df=pd.read_csv(data_file)
             logging.info('Read the dataset as dataframe')
 
             os.makedirs(os.path.dirname(self.ingestion_config.train_data_path),exist_ok=True)
