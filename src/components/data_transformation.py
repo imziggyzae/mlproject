@@ -1,4 +1,5 @@
 import sys
+from pathlib import Path
 from dataclasses import dataclass
 
 import numpy as np 
@@ -7,6 +8,14 @@ from sklearn.compose import ColumnTransformer
 from sklearn.impute import SimpleImputer
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import OneHotEncoder,StandardScaler
+
+project_root = Path(__file__).resolve().parents[2]
+if str(project_root) not in sys.path:
+    sys.path.insert(0, str(project_root))
+
+current_working_dir = Path.cwd()
+if str(current_working_dir) not in sys.path:
+    sys.path.insert(0, str(current_working_dir))
 
 from src.exception import CustomException
 from src.logger import logging
@@ -22,18 +31,12 @@ class DataTransformation:
     def __init__(self):
         self.data_transformation_config=DataTransformationConfig()
 
-    def get_data_transformer_object(self):
+    def get_data_transformer_object(self, numerical_columns, categorical_columns):
         '''
         This function si responsible for data trnasformation
         
         '''
         try:
-            numerical_columns = ["age", "daily_usage_hours", "num_platforms_used",
-            "avg_session_minutes", "mental_health_score",
-            "screen_time_before_sleep", "night_usage"]
-            categorical_columns = [
-                'gender', 'country', 'primary_platform', 'purpose',
-            ]
 
             num_pipeline= Pipeline(
                 steps=[
@@ -81,17 +84,17 @@ class DataTransformation:
 
             logging.info("Obtaining preprocessing object")
 
-            preprocessing_obj=self.get_data_transformer_object()
-
             target_column_name="addiction_level"
-            numerical_columns = ["age", "daily_usage_hours", "num_platforms_used",
-            "avg_session_minutes", "mental_health_score",
-            "screen_time_before_sleep", "night_usage"]
 
-            input_feature_train_df=train_df.drop(columns=[target_column_name],axis=1)
+            input_feature_train_df=train_df.drop(columns=[target_column_name])
+            input_feature_test_df=test_df.drop(columns=[target_column_name])
+
+            numerical_columns = input_feature_train_df.select_dtypes(include=['number']).columns.tolist()
+            categorical_columns = input_feature_train_df.select_dtypes(exclude=['number']).columns.tolist()
+
+            preprocessing_obj=self.get_data_transformer_object(numerical_columns, categorical_columns)
+
             target_feature_train_df=train_df[target_column_name]
-
-            input_feature_test_df=test_df.drop(columns=[target_column_name],axis=1)
             target_feature_test_df=test_df[target_column_name]
 
             logging.info(
