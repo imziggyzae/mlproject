@@ -10,10 +10,7 @@ if str(project_root) not in sys.path:
 
 from src.pipeline.predict_pipeline import CustomData, PredictPipeline
 
-application = Flask(
-    __name__,
-    template_folder=str(project_root / 'templates')
-)
+application = Flask(__name__)
 app = application
 
 
