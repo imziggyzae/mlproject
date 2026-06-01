@@ -49,7 +49,7 @@ class PredictPipeline:
     def __init__(self):
         project_root = Path(__file__).resolve().parents[2]
         self.model_path = project_root / "artifacts" / "model.pkl"
-        self.preprocessor_path = project_root / "artifacts" / "proprocessor.pkl"
+        self.preprocessor_path = project_root / "artifacts" / "preprocessor.pkl"
 
         self.model = load_object(str(self.model_path))
         self.preprocessor = load_object(str(self.preprocessor_path))
