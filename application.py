@@ -1,6 +1,7 @@
 import os
 import sys
 from pathlib import Path
+import logging as std_logging
 
 from flask import Flask, render_template, request
 
@@ -8,16 +9,32 @@ project_root = Path(__file__).resolve().parent
 if str(project_root) not in sys.path:
     sys.path.insert(0, str(project_root))
 
-from src.pipeline.predict_pipeline import CustomData, PredictPipeline
+# Configure basic logging early
+std_logging.basicConfig(
+    level=std_logging.INFO,
+    format='[%(asctime)s] %(levelname)s in %(module)s: %(message)s'
+)
+
+try:
+    from src.pipeline.predict_pipeline import CustomData, PredictPipeline
+except Exception as e:
+    std_logging.error(f"Failed to import predict_pipeline: {e}", exc_info=True)
+    raise
 
 application = Flask(__name__)
 app = application
+
+# Log app startup info
+app.logger.info(f"Flask app initialized. Project root: {project_root}")
 
 
 @app.errorhandler(Exception)
 def handle_exception(error):
     app.logger.exception("Unhandled application error")
-    return render_template('home.html', error="Something went wrong while processing your request. Please refresh and try again."), 500
+    import traceback
+    error_details = traceback.format_exc()
+    app.logger.error(f"Error traceback:\n{error_details}")
+    return render_template('home.html', error=f"Application error: {str(error)}\n\nDetails logged. Check server logs."), 500
 
 
 @app.route('/')
@@ -31,6 +48,25 @@ def predict_datapoint():
         return render_template('home.html')
 
     try:
+        app.logger.info("Prediction request received")
+        
+        # Log all form data
+        form_data = {
+            'age': request.form.get('age'),
+            'gender': request.form.get('gender'),
+            'daily_social_media_hours': request.form.get('daily_social_media_hours'),
+            'platform_usage': request.form.get('platform_usage'),
+            'sleep_hours': request.form.get('sleep_hours'),
+            'screen_time_before_sleep': request.form.get('screen_time_before_sleep'),
+            'academic_performance': request.form.get('academic_performance'),
+            'physical_activity': request.form.get('physical_activity'),
+            'social_interaction_level': request.form.get('social_interaction_level'),
+            'stress_level': request.form.get('stress_level'),
+            'anxiety_level': request.form.get('anxiety_level'),
+            'depression_label': request.form.get('depression_label'),
+        }
+        app.logger.info(f"Form data: {form_data}")
+        
         data = CustomData(
             age=float(request.form.get('age')),
             gender=request.form.get('gender'),
@@ -45,10 +81,18 @@ def predict_datapoint():
             anxiety_level=float(request.form.get('anxiety_level')),
             depression_label=float(request.form.get('depression_label')),
         )
+        app.logger.info("CustomData object created")
 
         pred_df = data.get_data_as_data_frame()
-        predictions = PredictPipeline().predict(pred_df)
+        app.logger.info("Data converted to dataframe")
+        
+        app.logger.info("Initializing PredictPipeline")
+        pipeline = PredictPipeline()
+        app.logger.info("Making prediction")
+        
+        predictions = pipeline.predict(pred_df)
         predicted_value = float(predictions[0])
+        app.logger.info(f"Prediction successful: {predicted_value}")
 
         return render_template(
             'home.html',
@@ -57,7 +101,10 @@ def predict_datapoint():
         )
     except Exception as e:
         app.logger.exception("Prediction request failed")
-        return render_template('home.html', error=f"Prediction error: {e}")
+        import traceback
+        error_details = traceback.format_exc()
+        app.logger.error(f"Error traceback:\n{error_details}")
+        return render_template('home.html', error=f"Prediction error: {str(e)}")
 
 
 if __name__ == '__main__':
