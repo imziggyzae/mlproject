@@ -4,6 +4,7 @@ from pathlib import Path
 import logging as std_logging
 
 from flask import Flask, render_template, request
+from jinja2 import FileSystemLoader
 
 project_root = Path(__file__).resolve().parent
 if str(project_root) not in sys.path:
@@ -25,11 +26,13 @@ except Exception as e:
 template_folder = project_root / 'templates'
 application = Flask(__name__, template_folder=str(template_folder))
 app = application
+app.jinja_loader = FileSystemLoader([str(template_folder)])
 
 # Log app startup info
 app.logger.info(f"Flask app initialized. Project root: {project_root}")
 app.logger.info(f"Template folder: {template_folder}")
 app.logger.info(f"Template folder exists: {template_folder.exists()}")
+app.logger.info(f"Jinja loader searchpath: {app.jinja_loader.searchpath}")
 
 
 @app.errorhandler(Exception)
