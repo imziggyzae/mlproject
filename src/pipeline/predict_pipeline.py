@@ -50,11 +50,18 @@ class PredictPipeline:
         project_root = Path(__file__).resolve().parents[2]
         self.model_path = project_root / "artifacts" / "model.pkl"
         self.preprocessor_path = project_root / "artifacts" / "preprocessor.pkl"
+        self.model = None
+        self.preprocessor = None
 
-        self.model = load_object(str(self.model_path))
-        self.preprocessor = load_object(str(self.preprocessor_path))
+    def _load_artifacts(self):
+        """Lazy load model and preprocessor only when needed"""
+        if self.model is None:
+            self.model = load_object(str(self.model_path))
+        if self.preprocessor is None:
+            self.preprocessor = load_object(str(self.preprocessor_path))
 
     def predict(self, features: pd.DataFrame):
+        self._load_artifacts()
         transformed_features = self.preprocessor.transform(features)
         predictions = self.model.predict(transformed_features)
         return np.array(predictions)
