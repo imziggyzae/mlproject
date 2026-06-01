@@ -21,11 +21,15 @@ except Exception as e:
     std_logging.error(f"Failed to import predict_pipeline: {e}", exc_info=True)
     raise
 
-application = Flask(__name__)
+# Create Flask app with explicit template folder
+template_folder = project_root / 'templates'
+application = Flask(__name__, template_folder=str(template_folder))
 app = application
 
 # Log app startup info
 app.logger.info(f"Flask app initialized. Project root: {project_root}")
+app.logger.info(f"Template folder: {template_folder}")
+app.logger.info(f"Template folder exists: {template_folder.exists()}")
 
 
 @app.errorhandler(Exception)
